@@ -61,3 +61,40 @@ def get_moves(puzzle:tuple):
 face=randomize_face()
 get_moves(face)
 
+from queue import Queue
+import math
+
+def BFS_Shortest_Path(Start, Goal):
+    Q = Queue()
+    visited = set()
+    Q.put((Start, 0))
+    visited.add(Start)
+    min_steps = math.inf
+
+    while not Q.empty():
+        (board, steps) = Q.get()
+        blank_pos = board.index(0)
+        row = blank_pos // 3
+        column = blank_pos % 3
+        if board == Goal:
+            return steps
+
+        for dx, dy in [(0,1), (0,-1),(1,0),(-1,0)]:
+            new_row = row + dx
+            new_column = column + dy
+
+            if new_row >= 0 and new_row <= 2 and new_column >= 0 and new_column <=2:
+                swap_pos = new_row * 3 + new_column
+                temp_board = list(board)
+                temp_board[blank_pos] = temp_board[swap_pos]
+                temp_board[swap_pos] = 0
+                new_board = tuple(temp_board)
+
+                if new_board not in visited:
+                    visited.add(new_board)
+                    Q.put((new_board, steps + 1))
+    return -1
+
+x = BFS_Shortest_Path((0,1,2,3,4,5,6,7,8),(1,2,0,3,4,5,6,7,8))
+print(f"Answer is {x}")
+
