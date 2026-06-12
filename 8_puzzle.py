@@ -41,28 +41,32 @@ def Dijkstra(Start, Goal):
     visited = dict()
 
     def pull_from_heap(Q):
-        minimum=Q[0]
+        minimum = Q[0]
 
-        last_index = len(Q)-1
-        Q[0]=Q[last_index]
-        Q.pop()
+        last = Q.pop()
 
-        current_index=0
+        if not Q:
+            return minimum
 
-        if len(Q) > 2:
-            
-            while 2 * current_index + 1 < len(Q):
-                left_index = 2 * current_index + 1
-                left = Q[left_index]
+        Q[0] = last
+        current_index = 0
 
-                if steps > left[1]:
-                    temp = Q[current_index]
-                    Q[current_index] = Q[left_index]
-                    Q[left_index] = temp
-                    current_index = left_index
-    
-        return minimum
+        while True:
+            left_index = 2 * current_index + 1
+            right_index = 2 * current_index + 2
+            smallest_index = current_index
 
+            if left_index < len(Q) and Q[left_index][1] < Q[smallest_index][1]:
+                smallest_index = left_index
+
+            if right_index < len(Q) and Q[right_index][1] < Q[smallest_index][1]:
+                smallest_index = right_index
+
+            if smallest_index == current_index:
+                return minimum
+
+            Q[current_index], Q[smallest_index] = Q[smallest_index], Q[current_index]
+            current_index = smallest_index
 
     def push_to_heap(board, steps):
         Q.append((board, steps))
@@ -102,15 +106,16 @@ def Dijkstra(Start, Goal):
                 temp_board[blank_pos] = temp_board[swap_pos]
                 temp_board[swap_pos] = 0
                 new_board = tuple(temp_board)
-                steps += 1
+                new_steps = steps + 1
 
                 if new_board not in visited:
-                    visited[new_board]=steps
-                    push_to_heap(new_board, steps)
+                    visited[new_board]=new_steps
+                    push_to_heap(new_board, new_steps)
 
-                if visited[new_board] > steps:
-                    visited[new_board]=steps
+                if visited[new_board] > new_steps:
+                    visited[new_board]=new_steps
+                    push_to_heap(new_board, new_steps)
     return -1
 
 x = Dijkstra((0,1,2,3,4,5,6,7,8),(1,2,0,3,4,5,6,7,8))
-print(f"Answer is {x}")
+print(f"Dijkstra answer is {x}")
