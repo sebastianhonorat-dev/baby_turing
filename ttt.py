@@ -55,56 +55,57 @@ def game_over(board:list,available_cells:set):
 
     return False,0
 
-board = set_board()
-available_cells = get_available_cells(board)
-display_board(board)
-
-turn = 0
-
-while True:
-
-    if not turn % 2:
-        player= "X"
-
-    else:
-        player="O"
-
-    try:
-        cell_choice=int(input(f"\n(\"-99\" to reset the board)\nSelect an available {player} placements {available_cells}:")) #temporary
-
-        if cell_choice not in available_cells and cell_choice != -99:
-            display_board(board)
-            continue
-        
-    except ValueError:
-        display_board(board)
-        continue
-
-    
-    if cell_choice == -99:
-        print("RESETING...")
-        board = set_board()
-        available_cells = get_available_cells(board)
-        display_board(board)
-
-        turn=0
-        continue
-
-    
-    select_cell(board,player,cell_choice)
-    print(f"{player} selected {cell_choice}")
-    
+if __name__ == "__main__":
+    board = set_board()
     available_cells = get_available_cells(board)
     display_board(board)
 
-    turn+=1
-    
-    if turn >= 5:
-        detected,detect_type = game_over(board,available_cells)
-        if detected:
-            if detect_type in (-1,1):
-                print(f"Game Over! {player} Won!")
-            else:
-                print("Draw!")
+    turn = 0
 
-            break
+    while True:
+
+        if not turn % 2:
+            player= "X"
+
+        else:
+            player="O"
+
+        try:
+            cell_choice=int(input(f"\n(\"-99\" to reset the board)\nSelect an available {player} placements {available_cells}:")) #temporary
+
+            if cell_choice not in available_cells and cell_choice != -99:
+                display_board(board)
+                continue
+            
+        except ValueError:
+            display_board(board)
+            continue
+
+        
+        if cell_choice == -99:
+            print("RESETING...")
+            board = set_board()
+            available_cells = get_available_cells(board)
+            display_board(board)
+
+            turn=0
+            continue
+
+        
+        select_cell(board,player,cell_choice)
+        print(f"{player} selected {cell_choice}")
+        
+        available_cells = get_available_cells(board)
+        display_board(board)
+
+        turn+=1
+        
+        if turn >= 5:
+            detected,detect_type = game_over(board,available_cells)
+            if detected:
+                if detect_type in (-1,1):
+                    print(f"Game Over! {player} Won!")
+                else:
+                    print("Draw!")
+
+                break
