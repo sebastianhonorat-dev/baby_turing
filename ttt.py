@@ -108,3 +108,57 @@ while True:
                 print("Draw!")
 
             break
+
+max_player ="O"
+min_player ="X"
+
+def Minimax(board, isMax):
+    detected, score = game_over(board, get_available_cells(board))
+    
+    if detected:
+        return score
+
+    if isMax:
+        best = -math.inf
+        for cell in get_available_cells(board):
+            select_cell(board,max_player,cell)
+            score = Minimax(board, False)
+            board[cell] = cell
+            best = max(best, score)
+        return best
+    else:
+        best = math.inf
+        for cell in get_available_cells(board):
+            select_cell(board,min_player,cell)
+            score = Minimax(board, True)
+            board[cell] = cell
+            best = min(best, score)
+        return best
+
+def choose_best_move(board):
+    best_score = -math.inf
+    best_move = None
+    for cell in get_available_cells(board):
+        select_cell(board, max_player, cell)
+        score = Minimax(board, False)
+        board[cell] = cell
+
+        if score > best_score:
+            best_score = score
+            best_move = cell
+    return best_move
+
+
+test_board = ["O","X","O",
+              3,"X",5,
+              6,7,8]
+
+print(f"Best move is {choose_best_move(test_board)}")
+
+"""
+for cell in get_available_cells(test_board):
+    select_cell(test_board, max_player, cell)
+    score = Minimax(test_board, False)
+    test_board[cell] = cell
+    print(f"Max plays at cell {cell}, score is: {score}")
+"""
