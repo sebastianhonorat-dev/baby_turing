@@ -209,7 +209,7 @@ for cell in get_available_cells(test_board):
 end = time.perf_counter()                
 elapsed = end - start
 print("Minimax time elapsed:",elapsed)
-
+print()
 #--- AB Pruning ---
 
 start = time.perf_counter()
@@ -221,5 +221,5 @@ for cell in get_available_cells(test_board):
 
 end = time.perf_counter()                
 elapsed = end - start
-print("\nAB Pruning time elapsed:",elapsed,"\nNodes expanded:",nodes_expanded)
+print("AB Pruning time elapsed:",elapsed,"\nNodes expanded:",nodes_expanded)
 
