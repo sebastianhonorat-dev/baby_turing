@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Search Lab</title>
+    <style>
+        body {
+            background: #111;
+            color: #eee;
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+
+        h1 {
+            margin-top: 20px;
+        }
+
+        #status {
+            margin: 20px;
+            font-size: 20px;
+        }
+
+        .board {
+            width: 324px;   /* 3 cells * 108px = 324px */
+            height: 324px;  /* Locked height strictly matching width */
+            margin: 0 auto 30px auto; /* 30px bottom margin prevents text overlap */
+            display: grid;
+            grid-template-columns: repeat(3, 108px);
+            grid-template-rows: repeat(3, 108px); 
+            gap: 0px; 
+        }
+
+        .cell {
+            width: 108px;
+            height: 108px;
+            background: #222;
+            border: 1px solid #333; /* Clean minimalist hairline grid */
+            cursor: pointer;
+            padding: 0;
+            box-sizing: content-box; 
+            background-size: 324px 324px; 
+            background-repeat: no-repeat;
+            transition: background-color 0.2s ease, border-color 0.4s ease; 
+        }
+
+        .cell:hover {
+            background-color: #2a2a2a;
+        }
+
+        /* Victory Takeover */
+        .board.victory-mode .cell {
+            border-color: transparent; /* Makes gridlines dissolve into one image */
+        }
+
+        button {
+            margin: 10px;
+            padding: 10px 18px;
+            font-size: 16px;
+        }
+
+        .metrics {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>Tic Tac Toe AI</h1>
+
+<a href="/puzzle">Go to 8 Puzzle Solver</a>
+
+<div id="status">Loading...</div>
+
+<div class="board" id="board"></div>
+
+<div style="margin-bottom: 15px;">
+    <label for="algoSelect">AI Algorithm: </label>
+    <select id="algoSelect">
+        <option value="Minimax">Minimax</option>
+        <option value="Alpha-Beta">Alpha-Beta Pruning</option>
+    </select>
+</div>
+
+<div>
+    <button onclick="resetGame()">Reset Game</button>
+</div>
+
+<div class="metrics">
+    <p>Moves: <span id="moves">0</span></p>
+    <p>Nodes Explored: <span id="nodes">--</span></p>
+    <p>Decision Time: <span id="time">--</span></p>
+</div>
+
+<script>
+let state = null;
+let isAiThinking = false;
+
+// Track your available image folders
+const imageSets = ['set_1', 'set_2', 'set_3'];
+let currentSet = 'set_1'; 
+
+// Function to pick a new random set
+function pickRandomImageSet() {
+    const randomIndex = Math.floor(Math.random() * imageSets.length);
+    currentSet = imageSets[randomIndex];
+    console.log("Active image set for this round:", currentSet);
+}
+
+async function loadState() {
+    const response = await fetch('/ttt/state');
+    state = await response.json();
+
+    renderBoard();
+    renderStatus();
+}
+
+function renderBoard() {
+    const boardDiv = document.getElementById('board');
+    boardDiv.innerHTML = '';
+
+    // FIX 1: Correctly calculate the winning symbol first before using it
+    const winningSymbol = state.winner === 'X' ? 'x' : (state.winner === 'O' ? 'o' : null);
+
+    // FIX 2: Apply victory mode safely to the parent container
+    if (winningSymbol) {
+        boardDiv.classList.add('victory-mode');
+    } else {
+        boardDiv.classList.remove('victory-mode');
+    }
+
+    state.board.forEach((cell, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'cell';
+        
+        // Calculate the individual slice offset positions
+        const col = index % 3;
+        const row = Math.floor(index / 3);
+        const xOffset = col * 108; 
+        const yOffset = row * 108; 
+
+        btn.style.backgroundPosition = `-${xOffset}px -${yOffset}px`;
+        btn.style.backgroundSize = "324px 324px"; 
+
+        // Assign images depending on standard play vs victory mode
+        if (winningSymbol) {
+            btn.style.backgroundImage = `url('/images/${currentSet}/${winningSymbol}')`;
+        } else {
+            if (cell === 'X') {
+                btn.style.backgroundImage = `url('/images/${currentSet}/x')`;
+            } else if (cell === 'O') {
+                btn.style.backgroundImage = `url('/images/${currentSet}/o')`;
+            } else {
+                btn.style.backgroundImage = 'none'; 
+            }
+        }
+
+        btn.onclick = () => playMove(index);
+
+        if (state.status !== 'playing' || state.turn !== 'X' || cell === 'X' || cell === 'O') {
+            btn.disabled = true;
+        }
+
+        boardDiv.appendChild(btn);
+    });
+
+    document.getElementById('moves').innerText = state.move_count;
+    document.getElementById('nodes').innerText = state.last_nodes ?? '--';
+    document.getElementById('time').innerText = state.last_time ?? '--';
+}
+
+function renderStatus() {
+    const status = document.getElementById('status');
+
+    if (state.status === 'draw') {
+        status.innerText = 'Draw!';
+        return;
+    }
+
+    if (state.status === 'win') {
+        status.innerText = state.winner + ' wins!';
+        return;
+    }
+
+    if (state.turn === 'X') {
+        status.innerText = 'Your Turn (X)';
+    } else {
+        status.innerText = 'AI Turn (O)...';
+        setTimeout(runAI, 500); 
+    }
+}
+
+async function playMove(cell) {
+    await fetch('/ttt/move/' + cell, {
+        method: 'POST'
+    });
+    await loadState();
+}
+
+async function runAI() {
+    if (isAiThinking || state.status !== 'playing' || state.turn !== 'O') return;
+    
+    const selectedAlgo = document.getElementById('algoSelect').value;
+    
+    isAiThinking = true;
+    try {
+        await fetch('/ttt/ai_move', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                algorithm: selectedAlgo 
+            })
+        });
+        await loadState();
+    } catch (error) {
+        console.error("AI Move failed:", error);
+    } finally {
+        isAiThinking = false;
+    }
+}
+
+async function resetGame() {
+    pickRandomImageSet(); 
+    await fetch('/ttt/reset', {
+        method: 'POST'
+    });
+    await loadState();
+}
+
+// Initial Boot Sequence
+pickRandomImageSet(); 
+loadState();
+</script>
+
+</body>
+</html>

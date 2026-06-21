@@ -1,6 +1,11 @@
+# ttt.py
+
 import math
 import time
 
+
+max_player ="O"
+min_player ="X"
 
 def display_board(board):
     for index in range(len(board)):
@@ -87,15 +92,19 @@ def Minimax(board, isMax):
 def choose_best_move(board):
     best_score = -math.inf
     best_move = None
+    nodes_expanded = 0
+
     for cell in get_available_cells(board):
         select_cell(board, max_player, cell)
         score = Minimax(board, False)
         board[cell] = cell
+        nodes_expanded += 1
 
         if score > best_score:
             best_score = score
             best_move = cell
-    return best_move
+
+    return best_move, nodes_expanded  # ← must return a tuple
 
 def AB_pruning(board:list, isMax:bool, alpha:int=-2, beta:int=2):
     nodes_expanded = 1
@@ -130,6 +139,25 @@ def AB_pruning(board:list, isMax:bool, alpha:int=-2, beta:int=2):
                 break
 
     return best, nodes_expanded
+
+# AI helped
+def choose_best_move_ab(board):
+    """Alpha-Beta version of choose_best_move. Returns (best_move, total_nodes_expanded)."""
+    best_score = -math.inf
+    best_move = None
+    total_nodes = 0
+
+    for cell in get_available_cells(board):
+        select_cell(board, max_player, cell)
+        score, nodes = AB_pruning(board, False)
+        board[cell] = cell
+        total_nodes += nodes
+
+        if score > best_score:
+            best_score = score
+            best_move = cell
+
+    return best_move, total_nodes
 
 # if __name__ == "__main__":
 #     board = set_board()
@@ -186,40 +214,37 @@ def AB_pruning(board:list, isMax:bool, alpha:int=-2, beta:int=2):
 
 #                 break
 
-max_player ="O"
-min_player ="X"
 
 
-test_board = [  "O","X","O",
-                3,"X",5,
-                6,7,8   ]
+    # test_board = [  "O","X","O",
+    #                 3,"X",5,
+    #                 6,7,8   ]
 
-display_board(test_board)
+    # display_board(test_board)
 
-# print(f"Best move is {choose_best_move(test_board)}")
+    # # print(f"Best move is {choose_best_move(test_board)}")
 
-#--- MiniMax ---
+    # #--- MiniMax ---
 
-start = time.perf_counter()
-for cell in get_available_cells(test_board):
-    select_cell(test_board, max_player, cell)
-    score = Minimax(test_board, False)
-    test_board[cell] = cell
-    print(f"Max plays at cell {cell}, score is: {score}")
-end = time.perf_counter()                
-elapsed = end - start
-print("Minimax time elapsed:",elapsed)
-print()
-#--- AB Pruning ---
+    # start = time.perf_counter()
+    # for cell in get_available_cells(test_board):
+    #     select_cell(test_board, max_player, cell)
+    #     score = Minimax(test_board, False)
+    #     test_board[cell] = cell
+    #     print(f"Max plays at cell {cell}, score is: {score}")
+    # end = time.perf_counter()                
+    # elapsed = end - start
+    # print("Minimax time elapsed:",elapsed)
+    # print()
+    # #--- AB Pruning ---
 
-start = time.perf_counter()
-for cell in get_available_cells(test_board):
-    select_cell(test_board, max_player, cell)
-    score,nodes_expanded = AB_pruning(test_board, False)
-    test_board[cell] = cell
-    print(f"Max plays at cell {cell}, score is: {score}")
+    # start = time.perf_counter()
+    # for cell in get_available_cells(test_board):
+    #     select_cell(test_board, max_player, cell)
+    #     score,nodes_expanded = AB_pruning(test_board, False)
+    #     test_board[cell] = cell
+    #     print(f"Max plays at cell {cell}, score is: {score}")
 
-end = time.perf_counter()                
-elapsed = end - start
-print("AB Pruning time elapsed:",elapsed,"\nNodes expanded:",nodes_expanded)
-
+    # end = time.perf_counter()                
+    # elapsed = end - start
+    # print("AB Pruning time elapsed:",elapsed,"\nNodes expanded:",nodes_expanded)

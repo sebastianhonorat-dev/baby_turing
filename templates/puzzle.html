@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>8 Puzzle Solver</title>
+    <style>
+        body { background: #111; color: #eee; font-family: Arial, sans-serif; text-align: center; }
+        .board { width: 306px; margin: 20px auto; display: grid; grid-template-columns: repeat(3, 100px); gap: 3px; background: #444; padding: 3px; }
+        .cell { width: 100px; height: 100px; background: #222; color: #fff; font-size: 24px; font-weight: bold; display: flex; align-items: center; justify-content: center; background-size: 300px 300px; background-repeat: no-repeat; }
+        button, select, input { margin: 10px; padding: 10px; font-size: 16px; }
+        .metrics { margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+<h1>8 Puzzle Solver</h1>
+<a href="/" style="color: #aaa;">Go to Tic Tac Toe</a><br><br>
+
+<div>
+    <label>Upload Base Image: </label>
+    <input type="file" id="imageUpload" accept="image/*" onchange="handleImageUpload(event)">
+</div>
+
+<div>
+    <label>Algorithm: </label>
+    <select id="algoSelect">
+        <option value="BFS">BFS</option>
+        <option value="Dijkstra">Dijkstra</option>
+    </select>
+    <button onclick="solvePuzzle()">Solve & Animate</button>
+    <button onclick="randomizePuzzle()">Randomize</button>
+    <button onclick="resetPuzzle()">Reset</button>
+</div>
+
+<div class="board" id="puzzleBoard"></div>
+
+<div class="metrics">
+    <p>Steps to Solve: <span id="steps">--</span></p>
+    <p>Nodes Explored: <span id="nodes">--</span></p>
+    <p>Time Taken: <span id="time">--</span> s</p>
+</div>
+
+<script>
+let puzzleState = null;
+let uploadedImageSrc = ""; 
+let animationInterval = null;
+
+async function loadState() {
+    const response = await fetch('/puzzle/state');
+    puzzleState = await response.json();
+    renderBoard(puzzleState.board);
+    
+    if (puzzleState.result) {
+        document.getElementById('steps').innerText = puzzleState.result.steps;
+        document.getElementById('nodes').innerText = puzzleState.result.nodes;
+        document.getElementById('time').innerText = puzzleState.result.elapsed;
+    }
+}
+
+function renderBoard(boardLayout) {
+    const boardDiv = document.getElementById('puzzleBoard');
+    boardDiv.innerHTML = '';
+
+    boardLayout.forEach((value) => {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        
+        if (value === 0) {
+            cell.style.backgroundColor = '#111';
+            cell.style.backgroundImage = 'none';
+            cell.innerText = ''; 
+        } else {
+            cell.innerText = uploadedImageSrc ? '' : value; // Hide numbers if an image is loaded
+            
+            if (uploadedImageSrc) {
+                cell.style.backgroundImage = `url(${uploadedImageSrc})`;
+                // Calculate original coordinates based on target value (1-8)
+                const originalIndex = value - 1;
+                const x = (originalIndex % 3) * 100;
+                const y = Math.floor(originalIndex / 3) * 100;
+                cell.style.backgroundPosition = `-${x}px -${y}px`;
+            }
+        }
+        boardDiv.appendChild(cell);
+    });
+}
+
+function handleImageUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        uploadedImageSrc = e.target.result;
+        renderBoard(puzzleState.board);
+    };
+    reader.readAsDataURL(file);
+}
+
+async function solvePuzzle() {
+    clearInterval(animationInterval);
+    const algo = document.getElementById('algoSelect').value;
+    
+    const response = await fetch('/puzzle/solve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ algorithm: algo })
+    });
+    
+    puzzleState = await response.json();
+    
+    document.getElementById('steps').innerText = puzzleState.result.steps;
+    document.getElementById('nodes').innerText = puzzleState.result.nodes;
+    document.getElementById('time').innerText = puzzleState.result.elapsed;
+
+    if (puzzleState.result && Array.isArray(puzzleState.result.path)) {
+        animatePath(puzzleState.result.path);
+    }
+}
+
+function animatePath(path) {
+    let currentStep = 0;
+    animationInterval = setInterval(() => {
+        if (currentStep >= path.length) {
+            clearInterval(animationInterval);
+            return;
+        }
+        renderBoard(path[currentStep]);
+        currentStep++;
+    }, 350); // Speed of tile transition in ms
+}
+
+async function randomizePuzzle() {
+    clearInterval(animationInterval);
+    const response = await fetch('/puzzle/randomize', { method: 'POST' });
+    puzzleState = await response.json();
+    loadState();
+}
+
+async function resetPuzzle() {
+    clearInterval(animationInterval);
+    const response = await fetch('/puzzle/reset', { method: 'POST' });
+    puzzleState = await response.json();
+    loadState();
+}
+
+loadState();
+</script>
+</body>
+</html>
