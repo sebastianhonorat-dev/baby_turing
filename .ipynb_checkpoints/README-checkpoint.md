@@ -29,7 +29,7 @@ Here is how your codebase is organized:
 ```text
 ├── app.py              # Main Flask server (handles routing, endpoints, and coordination)
 ├── ttt.py              # Tic-Tac-Toe rules, game logic, and Minimax AI engine
-├── puzzle_8.py         # 8-Puzzle board definitions, BFS, Dijkstra, and A* algorithms
+├── puzzle_8.py         # 8-Puzzle board definitions, BFS, and Dijkstra algorithms
 ├── ttt_images/         # Images accessed by the game
 │   ├── set_1/          #   └── contains x.png and o.png
 │   ├── set_2/          #   └── contains x.png and o.png
@@ -71,7 +71,7 @@ python app.py
 
 ## 👥 AI Devs
 
-* *Nicolas Choi*
+* *Nicholas Choi*
 * *Sebastian Honorat*
 
 ```

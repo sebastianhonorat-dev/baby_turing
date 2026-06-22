@@ -13,7 +13,7 @@ from ttt import (
     max_player,
     min_player,
 )
-from puzzle_8 import BFS_Shortest_Path, Dijkstra, randommizer, Start, Goal
+from puzzle_8 import BFS_Shortest_Path, Dijkstra, randommizer, Start, Goal, A_Star_Search, Heuristic
 
 app = Flask(__name__)
 
@@ -170,6 +170,15 @@ def puzzle_solve():
         path, nodes, elapsed = Dijkstra(board, Goal)
         puzzle_state["result"] = {
                     "algorithm": "Dijkstra", 
+                    "steps": len(path) - 1 if path else "—", 
+                    "nodes": nodes, 
+                    "elapsed": round(elapsed, 4),
+                    "path": path  # Add this line so JavaScript can read the path list!
+                }
+    elif algorithm == "A*":
+        path, nodes, elapsed = A_Star_Search(board, Goal)
+        puzzle_state["result"] = {
+                    "algorithm": "A*", 
                     "steps": len(path) - 1 if path else "—", 
                     "nodes": nodes, 
                     "elapsed": round(elapsed, 4),
