@@ -61,7 +61,7 @@ function renderBoard(boardLayout) {
     const boardDiv = document.getElementById('puzzleBoard');
     boardDiv.innerHTML = '';
 
-    boardLayout.forEach((value) => {
+    boardLayout.forEach((value, index) => {
         const cell = document.createElement('div');
         cell.className = 'cell';
         
@@ -81,6 +81,7 @@ function renderBoard(boardLayout) {
                 cell.style.backgroundPosition = `-${x}px -${y}px`;
             }
         }
+        cell.onclick = () => moveTile(index);
         boardDiv.appendChild(cell);
     });
 }
@@ -144,6 +145,16 @@ async function resetPuzzle() {
     loadState();
 }
 
+async function moveTile(index) {
+    clearInterval(animationInterval);
+
+    const response = await fetch('/puzzle/move/' + index, {
+        method: 'POST'
+    });
+
+    puzzleState = await response.json();
+    renderBoard(puzzleState.board);
+}
 loadState();
 </script>
 </body>

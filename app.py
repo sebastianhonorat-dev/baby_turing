@@ -17,9 +17,6 @@ from puzzle_8 import BFS_Shortest_Path, Dijkstra, randommizer, Start, Goal, A_St
 
 app = Flask(__name__)
 
-# ─────────────────────────────────────────────────────────────────────────────
-# In-memory game state
-# ─────────────────────────────────────────────────────────────────────────────
 ttt_state = {
     "board":      set_board(),
     "turn":       "X",
@@ -35,9 +32,6 @@ puzzle_state = {
     "result": None,
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Image set loader
-# ─────────────────────────────────────────────────────────────────────────────
 IMAGES_ROOT = "ttt_images"
 
 def find_image(folder, symbol):
@@ -63,9 +57,6 @@ def load_image_sets():
 
 IMAGE_SETS = load_image_sets()
 
-# ─────────────────────────────────────────────────────────────────────────────
-# TTT helpers
-# ─────────────────────────────────────────────────────────────────────────────
 def ttt_snapshot():
     s = ttt_state
     return {
@@ -88,9 +79,6 @@ def ttt_check():
     else:
         ttt_state["turn"] = "O" if ttt_state["turn"] == "X" else "X"
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Routes
-# ─────────────────────────────────────────────────────────────────────────────
 @app.route("/")
 def index():
     return render_template("index.html", image_sets=list(IMAGE_SETS.keys()))
@@ -164,7 +152,7 @@ def puzzle_solve():
             "steps": len(path) - 1 if path else "—", 
             "nodes": nodes, 
             "elapsed": round(elapsed, 4),
-            "path": path  # Add this line so JavaScript can read the path list!
+            "path": path  
         }
     elif algorithm == "Dijkstra":
         path, nodes, elapsed = Dijkstra(board, Goal)
@@ -173,7 +161,7 @@ def puzzle_solve():
                     "steps": len(path) - 1 if path else "—", 
                     "nodes": nodes, 
                     "elapsed": round(elapsed, 4),
-                    "path": path  # Add this line so JavaScript can read the path list!
+                    "path": path  
                 }
     elif algorithm == "A*":
         path, nodes, elapsed = A_Star_Search(board, Goal)
@@ -182,7 +170,7 @@ def puzzle_solve():
                     "steps": len(path) - 1 if path else "—", 
                     "nodes": nodes, 
                     "elapsed": round(elapsed, 4),
-                    "path": path  # Add this line so JavaScript can read the path list!
+                    "path": path  
                 }
     else:
         puzzle_state["result"] = {"algorithm": algorithm, "steps": "—", "nodes": "—", "elapsed": "—"}
@@ -197,6 +185,28 @@ def puzzle_reset():
 def puzzle_randomize():
     puzzle_state["board"]  = list(randommizer(tuple(puzzle_state["board"])))
     puzzle_state["result"] = None
+    return jsonify(puzzle_state)
+
+@app.route("/puzzle/move/<int:index>", methods=["POST"])
+def puzzle_move(index):
+    board = puzzle_state["board"]
+
+    if index < 0 or index > 8:
+        return jsonify(puzzle_state)
+
+    blank_pos = board.index(0)
+
+    blank_row = blank_pos // 3
+    blank_col = blank_pos % 3
+
+    clicked_row = index // 3
+    clicked_col = index % 3
+
+    distance = abs(blank_row - clicked_row) + abs(blank_col - clicked_col)
+    if distance == 1:
+        board[blank_pos], board[index] = board[index], board[blank_pos]
+        puzzle_state["result"] = None
+
     return jsonify(puzzle_state)
 
 if __name__ == "__main__":
