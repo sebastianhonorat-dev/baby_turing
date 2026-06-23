@@ -33,7 +33,7 @@
             width: 108px;
             height: 108px;
             background: #222;
-            border: 1px solid #333; /* Clean minimalist hairline grid */
+            border: 1px solid #333; /* Clean hairline grid */
             cursor: pointer;
             padding: 0;
             box-sizing: content-box; 
@@ -60,6 +60,10 @@
         .metrics {
             margin-top: 20px;
         }
+        
+        .controls-group {
+            margin-bottom: 15px;
+        }
     </style>
 </head>
 
@@ -73,12 +77,36 @@
 
 <div class="board" id="board"></div>
 
-<div style="margin-bottom: 15px;">
-    <label for="algoSelect">AI Algorithm: </label>
-    <select id="algoSelect">
-        <option value="Minimax">Minimax</option>
-        <option value="Alpha-Beta">Alpha-Beta Pruning</option>
+<div class="controls-group">
+    <label for="modeSelect">Game Mode: </label>
+    <select id="modeSelect" onchange="handleModeChange()">
+        <option value="pve">Player vs AI</option>
+        <option value="eve">AI vs AI</option>
     </select>
+</div>
+
+<div class="controls-group">
+    <div id="singleAlgoContainer">
+        <label for="algoSelect">AI Algorithm: </label>
+        <select id="algoSelect">
+            <option value="Minimax">Minimax</option>
+            <option value="Alpha-Beta">Alpha-Beta Pruning</option>
+        </select>
+    </div>
+    
+    <div id="dualAlgoContainer" style="display: none;">
+        <label for="algoSelectX">AI X Algorithm: </label>
+        <select id="algoSelectX">
+            <option value="Minimax">Minimax</option>
+            <option value="Alpha-Beta" selected>Alpha-Beta Pruning</option>
+        </select>
+        
+        <label for="algoSelectO" style="margin-left: 15px;">AI O Algorithm: </label>
+        <select id="algoSelectO">
+            <option value="Minimax">Minimax</option>
+            <option value="Alpha-Beta">Alpha-Beta Pruning</option>
+        </select>
+    </div>
 </div>
 
 <div>
@@ -99,7 +127,6 @@ let isAiThinking = false;
 const imageSets = ['set_1', 'set_2', 'set_3'];
 let currentSet = 'set_1'; 
 
-// Function to pick a new random set
 function pickRandomImageSet() {
     const randomIndex = Math.floor(Math.random() * imageSets.length);
     currentSet = imageSets[randomIndex];
@@ -118,21 +145,21 @@ function renderBoard() {
     const boardDiv = document.getElementById('board');
     boardDiv.innerHTML = '';
 
-    // FIX 1: Correctly calculate the winning symbol first before using it
     const winningSymbol = state.winner === 'X' ? 'x' : (state.winner === 'O' ? 'o' : null);
 
-    // FIX 2: Apply victory mode safely to the parent container
     if (winningSymbol) {
         boardDiv.classList.add('victory-mode');
     } else {
         boardDiv.classList.remove('victory-mode');
     }
 
+    // Get the current game mode ('pve' or 'eve')
+    const gameMode = document.getElementById('modeSelect').value;
+
     state.board.forEach((cell, index) => {
         const btn = document.createElement('button');
         btn.className = 'cell';
         
-        // Calculate the individual slice offset positions
         const col = index % 3;
         const row = Math.floor(index / 3);
         const xOffset = col * 108; 
@@ -141,7 +168,6 @@ function renderBoard() {
         btn.style.backgroundPosition = `-${xOffset}px -${yOffset}px`;
         btn.style.backgroundSize = "324px 324px"; 
 
-        // Assign images depending on standard play vs victory mode
         if (winningSymbol) {
             btn.style.backgroundImage = `url('/images/${currentSet}/${winningSymbol}')`;
         } else {
@@ -156,7 +182,17 @@ function renderBoard() {
 
         btn.onclick = () => playMove(index);
 
-        if (state.status !== 'playing' || state.turn !== 'X' || cell === 'X' || cell === 'O') {
+        // FOOLPROOF DISABLE LOGIC:
+        // 1. Always disable if the game is over or cell is already taken
+        if (state.status !== 'playing' || cell === 'X' || cell === 'O') {
+            btn.disabled = true;
+        } 
+        // 2. Disable in AI vs AI mode (the computer handles everything)
+        else if (gameMode === 'eve') {
+            btn.disabled = true;
+        } 
+        // 3. In Player vs AI mode, disable ONLY if it is not X's turn
+        else if (gameMode === 'pve' && state.turn !== 'X') {
             btn.disabled = true;
         }
 
@@ -170,6 +206,7 @@ function renderBoard() {
 
 function renderStatus() {
     const status = document.getElementById('status');
+    const gameMode = document.getElementById('modeSelect').value;
 
     if (state.status === 'draw') {
         status.innerText = 'Draw!';
@@ -181,15 +218,41 @@ function renderStatus() {
         return;
     }
 
-    if (state.turn === 'X') {
-        status.innerText = 'Your Turn (X)';
+    if (gameMode === 'eve') {
+        status.innerText = `AI vs AI Processing (${state.turn}'s turn)...`;
+        setTimeout(runAI, 600); 
     } else {
-        status.innerText = 'AI Turn (O)...';
-        setTimeout(runAI, 500); 
+        if (state.turn === 'X') {
+            status.innerText = 'Your Turn (X)';
+        } else {
+            status.innerText = 'AI Turn (O)...';
+            setTimeout(runAI, 500); 
+        }
+    }
+}
+
+function handleModeChange() {
+    const gameMode = document.getElementById('modeSelect').value;
+    const singleContainer = document.getElementById('singleAlgoContainer');
+    const dualContainer = document.getElementById('dualAlgoContainer');
+
+    if (gameMode === 'eve') {
+        singleContainer.style.display = 'none';
+        dualContainer.style.display = 'block';
+    } else {
+        singleContainer.style.display = 'block';
+        dualContainer.style.display = 'none';
+    }
+    
+    if (state) { 
+        renderBoard(); 
+        renderStatus(); 
     }
 }
 
 async function playMove(cell) {
+    if (isAiThinking || state.status !== 'playing') return;
+    
     await fetch('/ttt/move/' + cell, {
         method: 'POST'
     });
@@ -197,9 +260,19 @@ async function playMove(cell) {
 }
 
 async function runAI() {
-    if (isAiThinking || state.status !== 'playing' || state.turn !== 'O') return;
+    if (isAiThinking || state.status !== 'playing') return;
     
-    const selectedAlgo = document.getElementById('algoSelect').value;
+    const gameMode = document.getElementById('modeSelect').value;
+    let selectedAlgo;
+
+    if (gameMode === 'eve') {
+        selectedAlgo = (state.turn === 'X') 
+            ? document.getElementById('algoSelectX').value 
+            : document.getElementById('algoSelectO').value;
+    } else {
+        if (state.turn !== 'O') return; 
+        selectedAlgo = document.getElementById('algoSelect').value;
+    }
     
     isAiThinking = true;
     try {
@@ -221,6 +294,7 @@ async function runAI() {
 }
 
 async function resetGame() {
+    isAiThinking = false;
     pickRandomImageSet(); 
     await fetch('/ttt/reset', {
         method: 'POST'

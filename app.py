@@ -114,19 +114,27 @@ def ttt_human_move(cell):
 
 @app.route("/ttt/ai_move", methods=["POST"])
 def ttt_ai_move():
-    if ttt_state["status"] != "playing" or ttt_state["turn"] != max_player:
+    # Only block if the game is over. Let the AI calculate regardless of whose turn it is.
+    if ttt_state["status"] != "playing":
         return jsonify(ttt_snapshot())
+        
     algorithm = request.json.get("algorithm", "Minimax")
     board = ttt_state["board"]
-    t0    = time.perf_counter()
+    current_turn = ttt_state["turn"]  # Dynamically fetch 'X' or 'O'
+    
+    t0 = time.perf_counter()
+    # Execute the selected minimax/alpha-beta algorithm mapping
     move, nodes = choose_best_move(board) if algorithm == "Minimax" else choose_best_move_ab(board)
     elapsed = time.perf_counter() - t0
+    
     if move is not None:
-        select_cell(board, max_player, move)
+        # Use current_turn instead of the hardcoded max_player variable
+        select_cell(board, current_turn, move)
         ttt_state["move_count"] += 1
         ttt_state["last_nodes"]  = nodes
         ttt_state["last_time"]   = elapsed
         ttt_check()
+        
     return jsonify(ttt_snapshot())
 
 @app.route("/ttt/reset", methods=["POST"])
