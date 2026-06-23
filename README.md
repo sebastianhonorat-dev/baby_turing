@@ -24,8 +24,6 @@ The application is built using a **Flask** backend (Python) and a minimalist, cu
 
 ## 📂 Project Architecture
 
-Here is how your codebase is organized:
-
 ```text
 ├── app.py              # Main Flask server (handles routing, endpoints, and coordination)
 ├── ttt.py              # Tic-Tac-Toe rules, game logic, and Minimax AI engine
