@@ -83,12 +83,14 @@
 
 <div>
     <button onclick="resetGame()">Reset Game</button>
+    <button onclick="aiStart()">AI Starts</button>
 </div>
 
 <div class="metrics">
     <p>Moves: <span id="moves">0</span></p>
     <p>Nodes Explored: <span id="nodes">--</span></p>
     <p>Decision Time: <span id="time">--</span></p>
+    <p>Pruning Rate: <span id="pruning_rate">--</span></p>
 </div>
 
 <script>
@@ -166,6 +168,11 @@ function renderBoard() {
     document.getElementById('moves').innerText = state.move_count;
     document.getElementById('nodes').innerText = state.last_nodes ?? '--';
     document.getElementById('time').innerText = state.last_time ?? '--';
+
+    document.getElementById('pruning_rate').innerText =
+    state.pruning_rate !== null && state.pruning_rate !== undefined
+        ? state.pruning_rate + "%"
+        : "--";
 }
 
 function renderStatus() {
@@ -228,7 +235,17 @@ async function resetGame() {
     await loadState();
 }
 
-// Initial Boot Sequence
+
+async function aiStart() {
+    pickRandomImageSet();
+
+    await fetch('/ttt/ai_start', {
+        method: 'POST'
+    });
+
+    await loadState();
+}
+    
 pickRandomImageSet(); 
 loadState();
 </script>

@@ -25,6 +25,7 @@ ttt_state = {
     "last_nodes": None,
     "last_time":  None,
     "move_count": 0,
+    "pruning_rate": None,
 }
 
 puzzle_state = {
@@ -67,6 +68,7 @@ def ttt_snapshot():
         "last_nodes": s["last_nodes"],
         "last_time":  round(s["last_time"], 4) if s["last_time"] else None,
         "move_count": s["move_count"],
+        "pruning_rate": s["pruning_rate"],
     }
 
 def ttt_check():
@@ -116,23 +118,42 @@ def ttt_human_move(cell):
 def ttt_ai_move():
     if ttt_state["status"] != "playing" or ttt_state["turn"] != max_player:
         return jsonify(ttt_snapshot())
+
     algorithm = request.json.get("algorithm", "Minimax")
     board = ttt_state["board"]
-    t0    = time.perf_counter()
-    move, nodes = choose_best_move(board) if algorithm == "Minimax" else choose_best_move_ab(board)
+
+    t0 = time.perf_counter()
+
+    if algorithm == "Minimax":
+        move, nodes = choose_best_move(board)
+        pruning_rate = None
+
+    else:
+        baseline_move, minimax_nodes = choose_best_move(board)
+
+        move, nodes = choose_best_move_ab(board)
+
+        if minimax_nodes > 0:
+            pruning_rate = ((minimax_nodes - nodes) / minimax_nodes) * 100
+        else:
+            pruning_rate = None
+
     elapsed = time.perf_counter() - t0
+
     if move is not None:
         select_cell(board, max_player, move)
         ttt_state["move_count"] += 1
-        ttt_state["last_nodes"]  = nodes
-        ttt_state["last_time"]   = elapsed
+        ttt_state["last_nodes"] = nodes
+        ttt_state["last_time"] = elapsed
+        ttt_state["pruning_rate"] = round(pruning_rate, 2) if pruning_rate is not None else None
         ttt_check()
+
     return jsonify(ttt_snapshot())
 
 @app.route("/ttt/reset", methods=["POST"])
 def ttt_reset():
     ttt_state.update({"board": set_board(), "turn": "X", "status": "playing",
-                      "winner": None, "last_nodes": None, "last_time": None, "move_count": 0})
+                      "winner": None, "last_nodes": None, "last_time": None, "move_count": 0, "pruning_rate": None})
     return jsonify(ttt_snapshot())
 
 @app.route("/ttt/ai_start", methods=["POST"])
@@ -144,7 +165,8 @@ def ttt_ai_start():
         "winner": None,
         "last_nodes": None,
         "last_time": None,
-        "move_count": 0
+        "move_count": 0,
+        "pruning_rate": None,
     })
     return jsonify(ttt_snapshot())
     
