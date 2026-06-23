@@ -135,7 +135,19 @@ def ttt_reset():
                       "winner": None, "last_nodes": None, "last_time": None, "move_count": 0})
     return jsonify(ttt_snapshot())
 
-# Puzzle
+@app.route("/ttt/ai_start", methods=["POST"])
+def ttt_ai_start():
+    ttt_state.update({
+        "board": set_board(),
+        "turn": "O",
+        "status": "playing",
+        "winner": None,
+        "last_nodes": None,
+        "last_time": None,
+        "move_count": 0
+    })
+    return jsonify(ttt_snapshot())
+    
 @app.route("/puzzle/state")
 def puzzle_get_state():
     return jsonify(puzzle_state)
@@ -144,7 +156,6 @@ def puzzle_get_state():
 def puzzle_solve():
     algorithm = request.json.get("algorithm", "BFS")
     board     = tuple(puzzle_state["board"])
-        # Inside app.py under @app.route("/puzzle/solve", methods=["POST"])
     if algorithm == "BFS":
         path, nodes, elapsed = BFS_Shortest_Path(board, Goal)
         puzzle_state["result"] = {

@@ -66,28 +66,31 @@ def game_over(board:list,available_cells:set):
         return False,0
 
 def Minimax(board, isMax):
+    nodes_expanded = 1
     detected, score = game_over(board, get_available_cells(board))
     
     if detected:
-        return score
+        return score, nodes_expanded
 
     if isMax:
         best = -math.inf
         for cell in get_available_cells(board):
             select_cell(board,max_player,cell)
-            score = Minimax(board, False)
+            score, children = Minimax(board, False)
             board[cell] = cell
             best = max(best, score)
+            nodes_expanded += children
 
     else:
         best = math.inf
         for cell in get_available_cells(board):
             select_cell(board,min_player,cell)
-            score = Minimax(board, True)
+            score, children = Minimax(board, True)
             board[cell] = cell
             best = min(best, score)
+            nodes_expanded += children
 
-    return best
+    return best, nodes_expanded
 
 def choose_best_move(board):
     best_score = -math.inf
@@ -96,15 +99,15 @@ def choose_best_move(board):
 
     for cell in get_available_cells(board):
         select_cell(board, max_player, cell)
-        score = Minimax(board, False)
+        score, children = Minimax(board, False)
         board[cell] = cell
-        nodes_expanded += 1
+        nodes_expanded += children
 
         if score > best_score:
             best_score = score
             best_move = cell
 
-    return best_move, nodes_expanded  # ← must return a tuple
+    return best_move, nodes_expanded
 
 def AB_pruning(board:list, isMax:bool, alpha:int=-2, beta:int=2):
     nodes_expanded = 1

@@ -36,7 +36,6 @@ def BFS_Shortest_Path(Start, Goal):
 
     Q = Queue()
     visited = set()
-    # Track the path as a list containing the board configurations
     Q.put((Start, [Start]))
     visited.add(Start)
 
@@ -53,8 +52,7 @@ def BFS_Shortest_Path(Start, Goal):
         if board == Goal:
             end = time.perf_counter()                
             elapsed = end - start
-            return path, nodes_expanded, elapsed  # Returns the actual path sequence
-
+            return path, nodes_expanded, elapsed  
         for dx, dy in [(0,1), (0,-1),(1,0),(-1,0)]:
             new_row = row + dx
             new_column = column + dy
@@ -275,24 +273,18 @@ Start = (8, 1, 3, 4, 0, 2, 7, 6, 5)
 Goal = (1, 2, 3, 4, 5, 6, 7, 8, 0)
 
 if __name__ == "__main__":
-    #---BFS---
     x,y,z = BFS_Shortest_Path(Start,Goal)
     print("\nBFS steps:",x,"\nBFS boards viewed:",y,"\nBFS time elapsed:",z)
-    #---Dijkstra---
     x,y,z = Dijkstra(Start,Goal)
     print("\nDijkstra steps:",x,"\nDijkstra boards viewed:",y,"\nDijkstra time elapsed:",z)
-    #---A*---
     x,y,z = A_Star_Search(Start,Goal)
     print("\nA* steps:",x,"\nA* boards viewed:",y,"\nA* time elapsed:",z)
 
-    #----RANDOMIZED----
 
     random_start=randommizer(Start)
 
-    #---BFS---
     x,y,z = BFS_Shortest_Path(random_start,Goal)
     print("\nRandomized BFS steps:",x,"\nRandomized BFS boards viewed:",y,"\nRandomized BFS time elapsed:",z)
-    #---Dijkstra---
     x,y,z = Dijkstra(random_start,Goal)
     print("\nRandomized Dijkstra steps:",x,"\nRandomized Dijkstra boards viewed:",y,"\nRandomized Dijkstra time elapsed:",z)
     x,y,z = A_Star_Search(random_start,Goal)

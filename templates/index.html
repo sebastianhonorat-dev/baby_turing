@@ -83,6 +83,7 @@
 
 <div>
     <button onclick="resetGame()">Reset Game</button>
+    <button onclick="aiStart()">AI Starts</button>
 </div>
 
 <div class="metrics">
@@ -228,7 +229,17 @@ async function resetGame() {
     await loadState();
 }
 
-// Initial Boot Sequence
+
+async function aiStart() {
+    pickRandomImageSet();
+
+    await fetch('/ttt/ai_start', {
+        method: 'POST'
+    });
+
+    await loadState();
+}
+    
 pickRandomImageSet(); 
 loadState();
 </script>
