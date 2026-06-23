@@ -74,6 +74,14 @@
 <div class="board" id="board"></div>
 
 <div style="margin-bottom: 15px;">
+    <label>Mode:</label>
+    <select id="modeSelect">
+        <option value="human">Human vs AI</option>
+        <option value="ai">AI vs AI</option>
+    </select>
+</div>
+
+<div style="margin-bottom: 15px;">
     <label for="algoSelect">AI Algorithm: </label>
     <select id="algoSelect">
         <option value="Minimax">Minimax</option>
@@ -158,9 +166,17 @@ function renderBoard() {
 
         btn.onclick = () => playMove(index);
 
-        if (state.status !== 'playing' || state.turn !== 'X' || cell === 'X' || cell === 'O') {
-            btn.disabled = true;
-        }
+        const mode = document.getElementById("modeSelect").value;
+
+        if (
+            state.status !== 'playing' ||
+            cell === 'X' ||
+            cell === 'O' ||
+            (mode === "human" && state.turn !== 'X') ||
+            mode === "ai"
+        ) {
+        btn.disabled = true;
+}
 
         boardDiv.appendChild(btn);
     });
@@ -188,12 +204,20 @@ function renderStatus() {
         return;
     }
 
+    const mode = document.getElementById("modeSelect").value;
+
+    if (mode === "ai") {
+    status.innerText = "AI vs AI";
+    setTimeout(runAI, 500);
+    }
+    else {
     if (state.turn === 'X') {
         status.innerText = 'Your Turn (X)';
     } else {
         status.innerText = 'AI Turn (O)...';
-        setTimeout(runAI, 500); 
+        setTimeout(runAI, 500);
     }
+}
 }
 
 async function playMove(cell) {
@@ -204,7 +228,8 @@ async function playMove(cell) {
 }
 
 async function runAI() {
-    if (isAiThinking || state.status !== 'playing' || state.turn !== 'O') return;
+   if (isAiThinking || state.status !== 'playing')
+    return;
     
     const selectedAlgo = document.getElementById('algoSelect').value;
     

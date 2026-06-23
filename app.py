@@ -126,12 +126,12 @@ def ttt_ai_move():
     t0 = time.perf_counter()
 
     if algorithm == "Minimax":
-        move, nodes = choose_best_move(board)
+        move, nodes = choose_best_move(board, current_turn)
         pruning_rate = None
 
     else:
-        baseline_move, minimax_nodes = choose_best_move(board)
-        move, nodes = choose_best_move_ab(board)
+        baseline_move, minimax_nodes = choose_best_move(board, current_turn)
+        move, nodes = choose_best_move_ab(board, current_turn)
 
         if minimax_nodes > 0:
             pruning_rate = ((minimax_nodes - nodes) / minimax_nodes) * 100
