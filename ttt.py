@@ -143,22 +143,31 @@ def AB_pruning(board:list, isMax:bool, alpha:int=-2, beta:int=2):
 
     return best, nodes_expanded
 
-# AI helped
 def choose_best_move_ab(board):
-    """Alpha-Beta version of choose_best_move. Returns (best_move, total_nodes_expanded)."""
-    best_score = -math.inf
+    x_count = board.count("X")
+    o_count = board.count("O")
+    current_player = "X" if x_count == o_count else "O"
+
+    is_max = (current_player == max_player)
+
+    best_score = -math.inf if is_max else math.inf
     best_move = None
     total_nodes = 0
 
     for cell in get_available_cells(board):
-        select_cell(board, max_player, cell)
-        score, nodes = AB_pruning(board, False)
+        select_cell(board, current_player, cell)
+        score, nodes = AB_pruning(board, not is_max, alpha=-2, beta=2)
         board[cell] = cell
         total_nodes += nodes
 
-        if score > best_score:
-            best_score = score
-            best_move = cell
+        if is_max:
+            if score > best_score:
+                best_score = score
+                best_move = cell
+        else:
+            if score < best_score:
+                best_score = score
+                best_move = cell
 
     return best_move, total_nodes
 

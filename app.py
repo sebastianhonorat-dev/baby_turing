@@ -116,11 +116,12 @@ def ttt_human_move(cell):
 
 @app.route("/ttt/ai_move", methods=["POST"])
 def ttt_ai_move():
-    if ttt_state["status"] != "playing" or ttt_state["turn"] != max_player:
+    if ttt_state["status"] != "playing":
         return jsonify(ttt_snapshot())
 
     algorithm = request.json.get("algorithm", "Minimax")
     board = ttt_state["board"]
+    current_turn = ttt_state["turn"]
 
     t0 = time.perf_counter()
 
@@ -130,7 +131,6 @@ def ttt_ai_move():
 
     else:
         baseline_move, minimax_nodes = choose_best_move(board)
-
         move, nodes = choose_best_move_ab(board)
 
         if minimax_nodes > 0:
@@ -141,7 +141,7 @@ def ttt_ai_move():
     elapsed = time.perf_counter() - t0
 
     if move is not None:
-        select_cell(board, max_player, move)
+        select_cell(board, current_turn, move)
         ttt_state["move_count"] += 1
         ttt_state["last_nodes"] = nodes
         ttt_state["last_time"] = elapsed
@@ -243,4 +243,4 @@ def puzzle_move(index):
     return jsonify(puzzle_state)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, port=5001, use_reloader=False)
