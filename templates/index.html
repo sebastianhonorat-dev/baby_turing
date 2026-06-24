@@ -20,9 +20,9 @@
         }
 
         .board {
-            width: 324px;   /* 3 cells * 108px = 324px */
-            height: 324px;  /* Locked height strictly matching width */
-            margin: 0 auto 30px auto; /* 30px bottom margin prevents text overlap */
+            width: 324px;   
+            height: 324px;  
+            margin: 0 auto 30px auto; 
             display: grid;
             grid-template-columns: repeat(3, 108px);
             grid-template-rows: repeat(3, 108px); 
@@ -33,7 +33,7 @@
             width: 108px;
             height: 108px;
             background: #222;
-            border: 1px solid #333; /* Clean minimalist hairline grid */
+            border: 1px solid #333; 
             cursor: pointer;
             padding: 0;
             box-sizing: content-box; 
@@ -46,9 +46,9 @@
             background-color: #2a2a2a;
         }
 
-        /* Victory Takeover */
+        
         .board.victory-mode .cell {
-            border-color: transparent; /* Makes gridlines dissolve into one image */
+            border-color: transparent; 
         }
 
         button {
@@ -105,11 +105,9 @@
 let state = null;
 let isAiThinking = false;
 
-// Track your available image folders
 const imageSets = ['set_1', 'set_2', 'set_3'];
 let currentSet = 'set_1'; 
 
-// Function to pick a new random set
 function pickRandomImageSet() {
     const randomIndex = Math.floor(Math.random() * imageSets.length);
     currentSet = imageSets[randomIndex];
@@ -128,10 +126,8 @@ function renderBoard() {
     const boardDiv = document.getElementById('board');
     boardDiv.innerHTML = '';
 
-    // FIX 1: Correctly calculate the winning symbol first before using it
     const winningSymbol = state.winner === 'X' ? 'x' : (state.winner === 'O' ? 'o' : null);
 
-    // FIX 2: Apply victory mode safely to the parent container
     if (winningSymbol) {
         boardDiv.classList.add('victory-mode');
     } else {
@@ -142,7 +138,6 @@ function renderBoard() {
         const btn = document.createElement('button');
         btn.className = 'cell';
         
-        // Calculate the individual slice offset positions
         const col = index % 3;
         const row = Math.floor(index / 3);
         const xOffset = col * 108; 
@@ -151,7 +146,6 @@ function renderBoard() {
         btn.style.backgroundPosition = `-${xOffset}px -${yOffset}px`;
         btn.style.backgroundSize = "324px 324px"; 
 
-        // Assign images depending on standard play vs victory mode
         if (winningSymbol) {
             btn.style.backgroundImage = `url('/images/${currentSet}/${winningSymbol}')`;
         } else {

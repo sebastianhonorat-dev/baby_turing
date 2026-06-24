@@ -242,7 +242,7 @@ def choose_best_move_ab(board, current_player):
 
     # # print(f"Best move is {choose_best_move(test_board)}")
 
-    # #--- MiniMax ---
+    # 
 
     # start = time.perf_counter()
     # for cell in get_available_cells(test_board):
@@ -254,7 +254,7 @@ def choose_best_move_ab(board, current_player):
     # elapsed = end - start
     # print("Minimax time elapsed:",elapsed)
     # print()
-    # #--- AB Pruning ---
+    # 
 
     # start = time.perf_counter()
     # for cell in get_available_cells(test_board):
